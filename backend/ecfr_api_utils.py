@@ -70,20 +70,19 @@ class Regulation:
     @classmethod
     def from_response(cls, response: requests.Response) -> "Regulation":
         """
-        Currently dumb approach to get all text in <P></P> xml tags in
-        a given chapter, not yet robust to differences in tags between
+        Currently dumb approach to get all text across all xml tags in
+        a given regulation query response, not yet robust to differences in tags between
         different titles/chapters/etc.
 
-        Also currently ignores headings and other potentially useful
-        metadata
+        Also currently ignores headings and other potentially useful metadata
         """
         root = etree.fromstring(response.content)
-        paragraph_tags = root.xpath("//P")
-        paragraph_texts = []
-        for paragraph_tag in paragraph_tags:
-            text = paragraph_tag.text
-            if text:
-                text = text.strip()
+        # paragraph_tags = root.xpath("//P")
+        raw_texts = root.xpath("//text()")
+        paragraph_texts: List[str] = []
+        for raw_text in raw_texts:
+            if raw_text:
+                text = raw_text.strip()
                 text = re.sub(r"\s+", " ", text)
                 if text:  # skip empty strings
                     paragraph_texts.append(text)

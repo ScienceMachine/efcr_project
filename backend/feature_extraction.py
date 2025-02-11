@@ -4,7 +4,7 @@ from typing import List
 
 import requests
 
-from .ecfr_api_utils import Regulation, Agency, get_regulation
+from ecfr_api_utils import Regulation, Agency, get_regulation
 
 
 class IntFeatureExtractor:
@@ -54,7 +54,6 @@ class AgencyFeatures:
 
 
 def get_agency_features(agency: Agency, date: str) -> AgencyFeatures:
-    # regulations = []
     regulation_features = []
     for cfr_reference in agency.cfr_references:
         regulation = get_regulation(reference=cfr_reference, date=date)
