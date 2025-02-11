@@ -96,7 +96,6 @@ def _get_engine() -> Engine:
 
 def _create_tables() -> None:
     engine = _get_engine()
-    Base.metadata.drop_all(engine)  # TODO: delete me
     Base.metadata.create_all(engine)
 
 
@@ -175,8 +174,6 @@ def process_api_data() -> None:
                 agencies_processed += 1
                 if agencies_processed % 10 == 0:
                     print(f"Processed {agencies_processed} agencies...")
-                    break
-            break
 
 
 if __name__ == "__main__":
