@@ -1,5 +1,6 @@
 Flask
 lxml
+psycopg2-binary
 requests
 SQLAlchemy
 

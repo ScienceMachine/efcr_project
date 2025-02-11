@@ -2,6 +2,7 @@
 compute per-agency and per-regulation features and write to a postgres db
 """
 
+import json
 import logging
 import os
 from dataclasses import asdict
@@ -9,7 +10,6 @@ from typing import Optional, List, Dict
 
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import (
-    relationship,
     Mapped,
     mapped_column,
     DeclarativeBase,
@@ -40,7 +40,7 @@ def create_db() -> None:
         with engine.connect() as conn:
             conn.execute(sqlalchemy.text(f"CREATE DATABASE {POSTGRES_DB}"))
         logger.info(f"Created DB {POSTGRES_DB}")
-    except Exception as e:
+    except Exception:
         # too broad, should fix w/ specific exception type and fallback to failure
         logger.info(f"{POSTGRES_DB} already exists, skipping DB creation")
 
@@ -85,7 +85,7 @@ class ProcessingDeadLetter(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     date: Mapped[str]
     agency_name: Mapped[str]
-    references: Mapped[List[Dict[str, str]]]
+    references: Mapped[str]
     exception_msg: Mapped[str]
 
 
@@ -162,15 +162,12 @@ def process_api_data() -> None:
                     session.add_all(rows)
                     session.commit()
                 except Exception as e:
-                    references = [
-                        {k: str(v) for k, v in asdict(ref).items()}
-                        for ref in agency.cfr_references
-                    ]
+                    serializable_refs = [asdict(ref) for ref in agency.cfr_references]
                     session.add(
                         ProcessingDeadLetter(
                             date=ds,
                             agency_name=agency.name,
-                            references=references,
+                            references=json.dumps(serializable_refs),
                             exception_msg=str(e),
                         )
                     )
