@@ -73,7 +73,7 @@ class AgencyOnDate(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     date: Mapped[str]
     name: Mapped[str]
-    short_name: Mapped[str]
+    short_name: Mapped[Optional[str]]
     word_count: Mapped[int]
 
 
