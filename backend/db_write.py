@@ -96,6 +96,7 @@ def _get_engine() -> Engine:
 
 def _create_tables() -> None:
     engine = _get_engine()
+    Base.metadata.drop_all(engine)  # TODO: delete me
     Base.metadata.create_all(engine)
 
 
