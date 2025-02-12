@@ -1,14 +1,3 @@
-# general
-.envrc
-
-# python
-.venv/
-.ipynb_checkpoints/
-*.ipynb
-__pycache__
-.*pyc
-
-# autogen from npm/vue
 # Logs
 logs
 *.log

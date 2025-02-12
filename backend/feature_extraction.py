@@ -4,7 +4,7 @@ from typing import List
 
 import requests
 
-from ecfr_api_utils import Regulation, Agency, get_regulation
+from .ecfr_api_utils import Regulation, Agency, get_regulation
 
 
 class IntFeatureExtractor:
