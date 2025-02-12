@@ -1,14 +1,8 @@
-from typing import Dict
-import random
+from flask import Flask, jsonify, Response, request
+from sqlalchemy import select, alias, func
+from sqlalchemy.orm import Session
 
-from flask import Flask, jsonify, Response
-
-from .ecfr_api_utils import (
-    get_agencies,
-    CfrReference,
-    Agency,
-)
-from .feature_extraction import get_agency_features
+from backend.db import AgencyOnDate, get_engine
 
 app = Flask(__name__)
 
@@ -16,29 +10,60 @@ app = Flask(__name__)
 @app.route("/summary")
 def get_summary() -> Response:
     """Get summary of regulation stats by agency across agencies"""
-    all_agencies = get_agencies()
-    results = []
-    for i, agency in enumerate(all_agencies):
-        results.append(
-            {
-                "result_id": i,
-                "name": agency.name,
-                "short_name": agency.short_name,
-                "new_word_count": random.randint(0, 10_000_000),
-                "old_word_count": random.randint(0, 10_000_000),
-            }
+    agency_new = alias(AgencyOnDate, "agency_new")
+    agency_old = alias(AgencyOnDate, "agency_old")
+    query = (
+        select(
+            agency_new.c.name.label("name"),
+            agency_new.c.short_name.label("short_name"),
+            func.coalesce(agency_new.c.word_count.label("new_word_count"), 0),
+            func.coalesce(agency_old.c.word_count.label("old_word_count"), 0),
         )
-    print(f"Returning {len(results)} results...")
+        .select_from(agency_new)
+        .join(agency_old, agency_new.c.name == agency_old.c.name)
+        .where(agency_new.c.date == "2025-02-01")
+        .where(agency_old.c.date == "2018-02-01")
+        .order_by(agency_new.c.word_count.desc())
+    )
+    engine = get_engine()
+    results = []
+    with Session(engine) as session:
+        query_result = session.execute(query)
+        for i, row in enumerate(query_result):
+            results.append(
+                {
+                    "result_id": i,
+                    "name": row.name,
+                    "short_name": row.short_name,
+                    "new_word_count": row.new_word_count,
+                    "old_word_count": row.old_word_count,
+                }
+            )
     response = jsonify(results)
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
 
-@app.route("/agency_details")
-def get_agency_details():
+@app.post("/agency_details")
+def get_agency_details() -> Response:
     """Get payload w/ full stats, incl. historical"""
-    refs = CfrReference.from_json([{"title": 36, "chapter": "VIII"}])
-    agency = Agency(name="Ramjamz", short_name="jamz", cfr_references=refs)
-    agency_features = get_agency_features(agency=agency, date="2025-01-01")
-    result_str = str(agency_features.word_count)
-    return f"<p>{result_str}</p>"
+    agency_name = request.form["agency_name"]
+    min_date = request.form.get("min_date", "2018-02-01")
+    max_date = request.form.get("max_date", "2025-02-01")
+
+    query = (
+        select(AgencyOnDate.date, AgencyOnDate.short_name, AgencyOnDate.word_count)
+        .where(AgencyOnDate.name == agency_name)
+        .where(AgencyOnDate.date >= min_date)
+        .where(AgencyOnDate.date <= max_date)
+        .order_by(AgencyOnDate.date)
+    )
+    engine = get_engine()
+    result = {"name": agency_name, "features": []}
+    with Session(engine) as session:
+        query_result = session.execute(query)
+        for row in query_result:
+            result["features"].append({"date": row.date, "word_count": row.word_count})
+    response = jsonify(result)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response

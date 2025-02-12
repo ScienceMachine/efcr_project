@@ -1,10 +1,7 @@
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import List
 
-import requests
-
-from .ecfr_api_utils import Regulation, Agency, get_regulation
+from backend.ecfr_api_utils import Regulation, Agency, get_regulation
 
 
 class IntFeatureExtractor:

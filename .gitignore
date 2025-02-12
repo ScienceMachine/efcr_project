@@ -7,6 +7,7 @@
 *.ipynb
 __pycache__
 .*pyc
+*.egg-info/
 
 # autogen from npm/vue
 # Logs
