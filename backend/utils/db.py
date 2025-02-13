@@ -94,12 +94,6 @@ def get_engine() -> Engine:
     return create_engine(connection_str)
 
 
-def _create_tables() -> None:
-    engine = get_engine()
-    Base.metadata.drop_all(engine)  # TODO: delete me
-    Base.metadata.create_all(engine)
-
-
 def get_all_ds(min_year: int) -> List[str]:
     """
     currently just gets dates quartely since some min date

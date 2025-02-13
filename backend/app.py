@@ -65,6 +65,7 @@ def get_agency_details() -> Response:
     with Session(engine) as session:
         query_result = session.execute(query)
         for row in query_result:
+            print(row)
             result["features"].append({"date": row.date, "word_count": row.word_count})
     response = jsonify(result)
     # response.headers.add("Access-Control-Allow-Origin", "*")
