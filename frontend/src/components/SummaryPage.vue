@@ -1,26 +1,22 @@
 <script setup>
-import { ref, onMounted, useTemplateRef, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 const summaries = ref([])
-const agencyRef = useTemplateRef('agencies')
 const apiUrl = 'http://localhost:5000/summary'
 const dataReady = ref(false)
-const reachedThen = ref(false)
 
 onMounted(() => {
   axios
     .get(apiUrl)
     .then(function (response) {
       summaries.value = response.data
-      reachedThen.value = true
-      console.log('finished then()')
+      dataReady.value = true
     })
     .catch(function (error) {
       console.log(error)
     })
     .finally(function () {
-      dataReady.value = true
     })
 })
 </script>
@@ -39,7 +35,11 @@ onMounted(() => {
       </thead>
       <tbody>
         <tr v-for="agency in summaries" :key="agency.result_id" v-if="dataReady">
-          <td>{{ agency.name }}</td>
+          <td>
+            <RouterLink :to="{ name: 'agency', params: { agencyName: agency.name } }">{{
+              agency.name
+            }}</RouterLink>
+          </td>
           <td>{{ agency.short_name }}</td>
           <td>{{ agency.new_word_count }}</td>
           <td>{{ agency.old_word_count }}</td>

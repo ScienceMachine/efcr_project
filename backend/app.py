@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, Response, request
+from flask_cors import CORS
 from sqlalchemy import select, alias, func
 from sqlalchemy.orm import Session
 
 from backend.db import AgencyOnDate, get_engine
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/summary")
@@ -16,8 +18,8 @@ def get_summary() -> Response:
         select(
             agency_new.c.name.label("name"),
             agency_new.c.short_name.label("short_name"),
-            func.coalesce(agency_new.c.word_count.label("new_word_count"), 0),
-            func.coalesce(agency_old.c.word_count.label("old_word_count"), 0),
+            func.coalesce(agency_new.c.word_count, 0).label("new_word_count"),
+            func.coalesce(agency_old.c.word_count, 0).label("old_word_count"),
         )
         .select_from(agency_new)
         .join(agency_old, agency_new.c.name == agency_old.c.name)
@@ -40,16 +42,16 @@ def get_summary() -> Response:
                 }
             )
     response = jsonify(results)
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    # response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
 
-@app.post("/agency_details")
+@app.route("/agency_details", methods=["POST"])
 def get_agency_details() -> Response:
     """Get payload w/ full stats, incl. historical"""
-    agency_name = request.form["agency_name"]
-    min_date = request.form.get("min_date", "2018-02-01")
-    max_date = request.form.get("max_date", "2025-02-01")
+    agency_name = request.json["agency_name"]
+    min_date = request.json.get("min_date", "2018-02-01")
+    max_date = request.json.get("max_date", "2025-02-01")
 
     query = (
         select(AgencyOnDate.date, AgencyOnDate.short_name, AgencyOnDate.word_count)
@@ -65,5 +67,5 @@ def get_agency_details() -> Response:
         for row in query_result:
             result["features"].append({"date": row.date, "word_count": row.word_count})
     response = jsonify(result)
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    # response.headers.add("Access-Control-Allow-Origin", "*")
     return response

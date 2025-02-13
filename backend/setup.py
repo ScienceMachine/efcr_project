@@ -9,6 +9,7 @@ setup(
     packages=["backend"],
     install_requires=[
         "Flask",
+        "flask-cors",
         "lxml",
         "psycopg2-binary",
         "requests",

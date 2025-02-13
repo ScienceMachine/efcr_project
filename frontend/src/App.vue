@@ -1,10 +1,6 @@
-<script setup>
-import SummaryPage from './components/SummaryPage.vue'
-</script>
-
 <template>
   <main>
-    <SummaryPage />
+    <RouterView />
   </main>
 </template>
 

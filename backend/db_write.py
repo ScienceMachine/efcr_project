@@ -26,6 +26,7 @@ def _create_tables() -> None:
 def process_api_data() -> None:
     """todo: do batching properly"""
     all_ds = get_all_ds(min_year=2018)
+    # all_ds = ["2025-02-01", "2018-02-01"]
     engine = get_engine()
     with Session(engine) as session:
         for ds in all_ds:
